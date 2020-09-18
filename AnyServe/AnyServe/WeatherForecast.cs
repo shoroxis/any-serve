@@ -2,6 +2,7 @@ using System;
 
 namespace AnyServe
 {
+    [GeneratedController("api/weatherforecast")]
     public class WeatherForecast
     {
         public DateTime Date { get; set; }

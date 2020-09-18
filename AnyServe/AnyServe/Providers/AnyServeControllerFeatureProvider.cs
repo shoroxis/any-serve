@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc.Controllers;
+﻿using AnyServe.Controllers;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,23 +9,21 @@ using System.Threading.Tasks;
 
 namespace AnyServe.Providers
 {
-    public class AnyServeControllerFeatureProvider : ControllerFeatureProvider
+    /// <summary>
+    /// Support to load all availible controllers at runtime
+    /// </summary>
+    public class AnyServeControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
     {
-        protected override bool IsController(TypeInfo typeInfo)
+
+        public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
         {
-            var isController = base.IsController(typeInfo);
+            var currentAssembly = typeof(AnyServeControllerFeatureProvider).Assembly;
+            var candidates = currentAssembly.GetExportedTypes().Where(x => x.GetCustomAttributes<GeneratedControllerAttribute>().Any());
 
-            if (!isController)
+            foreach (var candidate in candidates)
             {
-                string[] validEndings = new[] { "Foobar", "Controller`1" };
-
-                isController = validEndings.Any(x =>
-                    typeInfo.Name.EndsWith(x, StringComparison.OrdinalIgnoreCase));
+                feature.Controllers.Add(typeof(BaseController<>).MakeGenericType(candidate).GetTypeInfo());
             }
-
-            Console.WriteLine($"{typeInfo.Name} IsController: {isController}.");
-
-            return isController;
         }
     }
 }

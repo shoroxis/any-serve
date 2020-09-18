@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AnyServe.Providers;
+using AnyServe.Storage;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -26,12 +27,14 @@ namespace AnyServe
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services
-                .AddMvcCore()
-                .ConfigureApplicationPartManager(manager =>
-                    {
-                        manager.FeatureProviders.Add(new AnyServeControllerFeatureProvider());
-                    });
+            services.AddSingleton(typeof(Storage<>));
+            services.
+                AddMvcCore(o => o.Conventions.Add(
+                    new AnyServeControllerRouteConvention()
+                )).
+                ConfigureApplicationPartManager(m =>
+                    m.FeatureProviders.Add(new AnyServeControllerFeatureProvider()
+                ));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -50,6 +53,8 @@ namespace AnyServe
             {
                 endpoints.MapControllers();
             });
+
+            //app.UseMvc();
         }
     }
 }
