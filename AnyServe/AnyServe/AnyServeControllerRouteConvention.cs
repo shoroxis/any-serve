@@ -7,6 +7,10 @@ namespace AnyServe
 {
     public class AnyServeControllerRouteConvention : IControllerModelConvention
     {
+        /// <summary>
+        /// Add routing to generic generated controller
+        /// </summary>
+        /// <param name="controller"></param>
         public void Apply(ControllerModel controller)
         {
             if (controller.ControllerType.IsGenericType)

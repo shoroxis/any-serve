@@ -14,7 +14,11 @@ namespace AnyServe.Providers
     /// </summary>
     public class AnyServeControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
     {
-
+        /// <summary>
+        /// Generate type marked with attribute "GeneratedControllerAttribute" and add it to availible controllers
+        /// </summary>
+        /// <param name="parts"></param>
+        /// <param name="feature"></param>
         public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
         {
             var currentAssembly = typeof(AnyServeControllerFeatureProvider).Assembly;
