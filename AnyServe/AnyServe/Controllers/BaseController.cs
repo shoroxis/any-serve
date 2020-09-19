@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 
 namespace AnyServe.Controllers
 {
+    /// <summary>
+    /// Base generic CRUD controller
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     [Route("api/[controller]")]
     public class BaseController<T> : Controller where T : class
     {

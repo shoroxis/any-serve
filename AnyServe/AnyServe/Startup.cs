@@ -53,8 +53,6 @@ namespace AnyServe
             {
                 endpoints.MapControllers();
             });
-
-            //app.UseMvc();
         }
     }
 }
