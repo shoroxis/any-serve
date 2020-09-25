@@ -18,9 +18,10 @@ namespace AnyServe.Controllers
         private Storage<T> _storage;
         private readonly ILogger<BaseController<T>> _logger;
 
-        public BaseController(Storage<T> storage)
+        public BaseController(Storage<T> storage, ILogger<BaseController<T>> logger)
         {
             _storage = storage;
+            _logger = logger;
             _logger.LogInformation("BaseController created");
         }
 
