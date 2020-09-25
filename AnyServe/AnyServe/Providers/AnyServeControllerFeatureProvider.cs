@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -26,7 +27,12 @@ namespace AnyServe.Providers
 
             foreach (var candidate in candidates)
             {
-                feature.Controllers.Add(typeof(BaseController<>).MakeGenericType(candidate).GetTypeInfo());
+                var genericType = typeof(BaseController<>).MakeGenericType(candidate).GetTypeInfo();
+                feature.Controllers.Add(genericType);
+
+                //TODO: Remove
+                //FOR DEBUG ONLY!
+                Debug.WriteLine("Generic controller for: " + candidate.FullName);
             }
         }
     }
