@@ -34,6 +34,14 @@ namespace AnyServe.ITests
                 response.Content.Headers.ContentType.ToString());
         }
 
+        [Theory]
+        [InlineData("/api/weatherforecast")]
+        public async Task GetById_EndpointsReturnSuccessAndCorrectContentType(string url)
+        {
+            //
+        }
+
+
         #endregion
 
 
