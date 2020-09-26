@@ -20,9 +20,10 @@ namespace AnyServe.Storage
             return storage.FirstOrDefault(x => x.Key == id).Value;
         }
 
-        public void AddOrUpdate(Guid id, T item)
+        public async Task<T> AddOrUpdate(Guid id, T item)
         {
             storage[id] = item;
+            return item;
         }
     }
 }
