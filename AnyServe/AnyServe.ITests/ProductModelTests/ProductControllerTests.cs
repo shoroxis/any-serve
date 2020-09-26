@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.TestHost;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace AnyServe.ITests
 {
@@ -33,6 +36,34 @@ namespace AnyServe.ITests
             response.EnsureSuccessStatusCode(); // Status Code 200-299
             Assert.Equal("application/json; charset=utf-8",
                 response.Content.Headers.ContentType.ToString());
+        }
+
+        [Theory]
+        [InlineData("/api/product")]
+        public async Task POST_AddsItemCorrect(string url)
+        {
+            // Arrange (test preparation)
+            var product = new Product()
+            {
+                id = Guid.NewGuid(),
+                Name = "TestProductName",
+                Description = "Test product description"
+            };
+            var json = JsonConvert.SerializeObject(product);
+            var data = new StringContent(json, Encoding.UTF8, "application/json");
+            var urlWithId = url + "/" + product.id;
+
+            // Act
+            var response = await Client.PostAsync(urlWithId, data);
+
+            // Assert
+            response.EnsureSuccessStatusCode(); // Status Code 200-299
+            Assert.Equal("application/json; charset=utf-8",
+                response.Content.Headers.ContentType.ToString());
+            //Try get stored product
+            response = await Client.GetAsync(urlWithId);
+            var addedProduct = JsonConvert.DeserializeObject<Product>(await response.Content.ReadAsStringAsync());
+            Assert.Equal(product.id, addedProduct.id);
         }
 
         #endregion

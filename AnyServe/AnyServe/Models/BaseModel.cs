@@ -7,6 +7,6 @@ namespace AnyServe.Models
 {
     public class BaseModel
     {
-        Guid id { get; set; }
+        public Guid id { get; set; }
     }
 }

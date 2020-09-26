@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace AnyServe.Controllers
 {
@@ -30,15 +31,16 @@ namespace AnyServe.Controllers
         }
 
         [HttpGet("{id}")]
-        public T Get(Guid id)
+        public IActionResult Get(Guid id)
         {
-            return _storage.GetById(id);
+            return Ok(_storage.GetById(id));
         }
 
         [HttpPost("{id}")]
-        public void Post(Guid id, [FromBody] T value)
+        public async Task<IActionResult> Post(Guid id, [FromBody] T value)
         {
-            _storage.AddOrUpdate(id, value);
+            await _storage.AddOrUpdate(id, value);
+            return CreatedAtAction(nameof(Post), value);
         }
     }
 }
