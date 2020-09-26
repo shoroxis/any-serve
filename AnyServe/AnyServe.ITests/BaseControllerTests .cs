@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace AnyServe.ITests
 {
@@ -33,14 +34,6 @@ namespace AnyServe.ITests
             Assert.Equal("application/json; charset=utf-8",
                 response.Content.Headers.ContentType.ToString());
         }
-
-        [Theory]
-        [InlineData("/api/weatherforecast")]
-        public async Task GetById_EndpointsReturnSuccessAndCorrectContentType(string url)
-        {
-            //
-        }
-
 
         #endregion
 
