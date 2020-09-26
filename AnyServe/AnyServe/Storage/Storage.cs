@@ -9,7 +9,7 @@ namespace AnyServe.Storage
     /// Basic entities storage
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class Storage<T> where T : class
+    public class Storage<T> where T : class, IRepository<T> 
     {
         private Dictionary<Guid, T> storage = new Dictionary<Guid, T>();
 
@@ -25,5 +25,7 @@ namespace AnyServe.Storage
             storage[id] = item;
             return item;
         }
+
+
     }
 }

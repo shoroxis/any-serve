@@ -27,7 +27,6 @@ namespace AnyServe
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton(typeof(Storage<>));
             services.
                 AddMvcCore(o => o.Conventions.Add(
                     new AnyServeControllerRouteConvention()
@@ -35,6 +34,7 @@ namespace AnyServe
                 ConfigureApplicationPartManager(m =>
                     m.FeatureProviders.Add(new AnyServeControllerFeatureProvider()
                 ));
+            services.AddSingleton<IRepository<>,Storage<>>(typeof(Storage<>));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -14,12 +14,12 @@ namespace AnyServe.Controllers
     [Route("api/[controller]")]
     public class BaseController<T> : Controller where T : class
     {
-        private Storage<T> _storage;
+        private IRepository<T> _repository;
         private readonly ILogger<BaseController<T>> _logger;
 
-        public BaseController(Storage<T> storage, ILogger<BaseController<T>> logger)
+        public BaseController(IRepository<T> repository, ILogger<BaseController<T>> logger)
         {
-            _storage = storage;
+            _repository = repository;
             _logger = logger;
             _logger.LogInformation("BaseController created");
         }
@@ -27,19 +27,19 @@ namespace AnyServe.Controllers
         [HttpGet]
         public IEnumerable<T> Get()
         {
-            return _storage.GetAll();
+            return (IEnumerable<T>)_repository.GetAll();
         }
 
         [HttpGet("{id}")]
         public IActionResult Get(Guid id)
         {
-            return Ok(_storage.GetById(id));
+            return Ok(_repository.GetById(id));
         }
 
         [HttpPost("{id}")]
         public async Task<IActionResult> Post(Guid id, [FromBody] T value)
         {
-            await _storage.AddOrUpdate(id, value);
+            await _repository.AddOrUpdate(id, value);
             return CreatedAtAction(nameof(Post), value);
         }
     }
