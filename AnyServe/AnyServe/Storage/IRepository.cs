@@ -7,7 +7,7 @@ namespace AnyServe.Storage
 {
     public interface IRepository<T>
     {
-        T GetAll();
+       IEnumerable<T> GetAll();
 
         T GetById(Guid id);
 

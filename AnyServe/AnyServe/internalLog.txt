@@ -13,3 +13,8 @@
 2020-09-26 16:47:24.3344 Info Adding target FileTarget(Name=alldata)
 2020-09-26 16:47:24.3518 Info Adding target FileTarget(Name=anyserv-web)
 2020-09-26 16:47:24.3853 Info Validating config: TargetNames=alldata, anyserv-web, ConfigItems=45, FilePath=/src/bin/netcoreapp3.1/nlog.config
+2020-09-26 19:32:40.0600 Info Message Template Auto Format enabled
+2020-09-26 19:32:40.1694 Info Loading assembly: NLog.Web.AspNetCore
+2020-09-26 19:32:40.2412 Info Adding target FileTarget(Name=alldata)
+2020-09-26 19:32:40.2591 Info Adding target FileTarget(Name=anyserv-web)
+2020-09-26 19:32:40.3111 Info Validating config: TargetNames=alldata, anyserv-web, ConfigItems=45, FilePath=/src/bin/netcoreapp3.1/nlog.config

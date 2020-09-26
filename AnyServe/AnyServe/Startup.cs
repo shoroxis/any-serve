@@ -34,7 +34,7 @@ namespace AnyServe
                 ConfigureApplicationPartManager(m =>
                     m.FeatureProviders.Add(new AnyServeControllerFeatureProvider()
                 ));
-            services.AddSingleton<IRepository<>,Storage<>>(typeof(Storage<>));
+            services.AddSingleton(typeof(IRepository<>), typeof(Storage<>));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
