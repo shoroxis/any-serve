@@ -22,17 +22,21 @@ namespace AnyServe.Providers
         /// <param name="feature"></param>
         public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
         {
-            var currentAssembly = typeof(AnyServeControllerFeatureProvider).Assembly;
-            var candidates = currentAssembly.GetExportedTypes().Where(x => x.GetCustomAttributes<GeneratedControllerAttribute>().Any());
+            var ownAssemblies = AppDomain.CurrentDomain.GetAssemblies().Where(a => a.FullName.Contains("AnyServ"));
 
-            foreach (var candidate in candidates)
+            foreach (var currentAssembly in ownAssemblies)
             {
-                var genericType = typeof(BaseController<>).MakeGenericType(candidate).GetTypeInfo();
-                feature.Controllers.Add(genericType);
+                var candidates = currentAssembly.GetExportedTypes().Where(x => x.GetCustomAttributes<GeneratedControllerAttribute>().Any());
 
-                //TODO: Remove
-                //FOR DEBUG ONLY!
-                Debug.WriteLine("Generic controller for: " + candidate.FullName);
+                foreach (var candidate in candidates)
+                {
+                    var genericType = typeof(BaseController<>).MakeGenericType(candidate).GetTypeInfo();
+                    feature.Controllers.Add(genericType);
+
+                    //TODO: Remove
+                    //FOR DEBUG ONLY!
+                    Debug.WriteLine("Generic controller for: " + candidate.FullName);
+                }
             }
         }
     }
