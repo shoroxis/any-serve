@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace AnyServe.Models
 {
-    interface IBaseModel
+    public class BaseModel
     {
         Guid id { get; set; }
     }
