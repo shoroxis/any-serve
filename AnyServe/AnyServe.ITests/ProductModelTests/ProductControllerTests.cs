@@ -102,7 +102,7 @@ namespace AnyServe.ITests
 
             //Try get stored product after deleting 
             response = await Client.GetAsync(urlWithId);
-            Assert.NotEqual(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.NotEqual(System.Net.HttpStatusCode.NoContent, response.StatusCode);
         }
 
 
@@ -125,7 +125,7 @@ namespace AnyServe.ITests
             var response = await Client.DeleteAsync(urlWithId);
 
             // Assert
-            Assert.NotEqual(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.NotEqual(System.Net.HttpStatusCode.NoContent, response.StatusCode);
 
         }
 
