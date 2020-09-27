@@ -42,5 +42,16 @@ namespace AnyServe.Controllers
             await _storage.AddOrUpdate(id, value);
             return CreatedAtAction(nameof(Post), value);
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id, [FromBody] T value)
+        {
+            var ifModelDeleted = await _storage.Delete(id);
+
+            if (ifModelDeleted)
+                return Ok();
+
+            return NotFound();
+        }
     }
 }

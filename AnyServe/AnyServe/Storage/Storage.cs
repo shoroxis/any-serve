@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace AnyServe.Storage
@@ -24,6 +25,15 @@ namespace AnyServe.Storage
         {
             storage[id] = item;
             return item;
+        }
+
+        public async Task<bool> Delete(Guid id)
+        {
+            bool storage_delete_output;
+            // To convert to async fanction
+            await Task.FromResult( storage_delete_output =  storage.Remove(id) );
+
+            return storage_delete_output;
         }
     }
 }
