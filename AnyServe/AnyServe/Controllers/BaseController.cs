@@ -33,7 +33,11 @@ namespace AnyServe.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(Guid id)
         {
-            return Ok(_storage.GetById(id));
+            var s = _storage.GetById(id);
+            if(s != null)
+                return Ok(_storage.GetById(id));
+
+            return NotFound();
         }
 
         [HttpPost("{id}")]
@@ -44,7 +48,7 @@ namespace AnyServe.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id, [FromBody] T value)
+        public async Task<IActionResult> Delete(Guid id)
         {
             var ifModelDeleted = await _storage.Delete(id);
 

@@ -66,6 +66,69 @@ namespace AnyServe.ITests
             Assert.Equal(product.id, addedProduct.id);
         }
 
+        [Theory]
+        [InlineData("/api/product")]
+        public async Task Delete_ItemWithExistingId(string url)
+        {
+            // Arrange (test preparation)
+            var product = new Product()
+            {
+                id = Guid.NewGuid(),
+                Name = "TestProductName",
+                Description = "Test product description"
+            };
+            var json = JsonConvert.SerializeObject(product);
+            var data = new StringContent(json, Encoding.UTF8, "application/json");
+            var urlWithId = url + "/" + product.id;
+
+            // Act
+            var response = await Client.PostAsync(urlWithId, data);
+
+            // Assert
+            response.EnsureSuccessStatusCode(); // Status Code 200-299
+            Assert.Equal("application/json; charset=utf-8",
+                response.Content.Headers.ContentType.ToString());
+
+            //Try get stored product
+            response = await Client.GetAsync(urlWithId);
+            var addedProduct = JsonConvert.DeserializeObject<Product>(await response.Content.ReadAsStringAsync());
+            Assert.Equal(product.id, addedProduct.id);
+
+            //Try Delete stored product
+            response = await Client.DeleteAsync(urlWithId);
+
+            response.EnsureSuccessStatusCode(); // Status Code 200-299
+            Assert.Equal( System.Net.HttpStatusCode.OK, response.StatusCode);
+
+            //Try get stored product after deleting 
+            response = await Client.GetAsync(urlWithId);
+            Assert.NotEqual(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+
+        [Theory]
+        [InlineData("/api/product")]
+        public async Task Delete_ItemWithNotExistingId(string url)
+        {
+            // Arrange (test preparation)
+            var product = new Product()
+            {
+                id = Guid.NewGuid(),
+                Name = "TestProductNameDoesnotExist",
+                Description = "Test product description doesnot exist"
+            };
+            var json = JsonConvert.SerializeObject(product);
+            var data = new StringContent(json, Encoding.UTF8, "application/json");
+            var urlWithId = url + "/" + product.id;
+
+            // Act
+            var response = await Client.DeleteAsync(urlWithId);
+
+            // Assert
+            Assert.NotEqual(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+
+        }
+
         #endregion
 
 
