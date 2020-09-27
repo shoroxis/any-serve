@@ -37,7 +37,7 @@ namespace AnyServe.Controllers
             if(s != null)
                 return Ok(_storage.GetById(id));
 
-            return NotFound();
+            return BadRequest();
         }
 
         [HttpPost("{id}")]
@@ -55,7 +55,7 @@ namespace AnyServe.Controllers
             if (ifModelDeleted)
                 return Ok();
 
-            return NotFound();
+            return BadRequest();
         }
     }
 }
