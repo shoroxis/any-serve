@@ -68,7 +68,7 @@ namespace AnyServe.ITests
 
         [Theory]
         [InlineData("/api/product")]
-        public async Task Delete_ItemWithExistingId(string url)
+        public async Task Delete_ItemWithExistingId_ReturnsSuccess(string url)
         {
             // Arrange (test preparation)
             var product = new Product()
@@ -108,7 +108,7 @@ namespace AnyServe.ITests
 
         [Theory]
         [InlineData("/api/product")]
-        public async Task Delete_ItemWithNotExistingId(string url)
+        public async Task Delete_ItemWithNotExistingId_ReturnsSuccess_NoContent(string url)
         {
             // Arrange (test preparation)
             var product = new Product()
