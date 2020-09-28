@@ -33,7 +33,11 @@ namespace AnyServe.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(Guid id)
         {
-            return Ok(_storage.GetById(id));
+            var result = _storage.GetById(id);
+            if(result != null)
+                return Ok(result);
+
+            return NoContent();
         }
 
         [HttpPost("{id}")]
@@ -41,6 +45,17 @@ namespace AnyServe.Controllers
         {
             await _storage.AddOrUpdate(id, value);
             return CreatedAtAction(nameof(Post), value);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var ifModelDeleted = await _storage.Delete(id);
+
+            if (ifModelDeleted)
+                return Ok();
+
+            return NoContent();
         }
     }
 }
