@@ -1,7 +1,7 @@
 using System;
 using AnyServe.Models;
 
-namespace AnyServe
+namespace AnyServe.ITests.Models
 {
     [GeneratedController("api/product")]
     public class Product : BaseModel

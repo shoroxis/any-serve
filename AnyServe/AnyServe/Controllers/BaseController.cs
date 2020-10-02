@@ -1,4 +1,5 @@
-﻿using AnyServe.Storage;
+﻿using AnyServe.Models;
+using AnyServe.Storage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -12,12 +13,12 @@ namespace AnyServe.Controllers
     /// </summary>
     /// <typeparam name="T"></typeparam>
     [Route("api/[controller]")]
-    public class BaseController<T> : Controller where T : class
+    public class BaseController<T> : Controller where T : BaseModel
     {
-        private Storage<T> _storage;
+        private readonly IDataRepository<T> _storage;
         private readonly ILogger<BaseController<T>> _logger;
 
-        public BaseController(Storage<T> storage, ILogger<BaseController<T>> logger)
+        public BaseController(IDataRepository<T> storage, ILogger<BaseController<T>> logger)
         {
             _storage = storage;
             _logger = logger;
@@ -33,13 +34,13 @@ namespace AnyServe.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(Guid id)
         {
-            return Ok(_storage.GetById(id));
+            return Ok(_storage.Get(id));
         }
 
         [HttpPost("{id}")]
         public async Task<IActionResult> Post(Guid id, [FromBody] T value)
         {
-            await _storage.AddOrUpdate(id, value);
+            await _storage.Insert(value);
             return CreatedAtAction(nameof(Post), value);
         }
     }
