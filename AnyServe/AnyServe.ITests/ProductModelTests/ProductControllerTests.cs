@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System;
 using Newtonsoft.Json;
 using System.Text;
+using AnyServe.ITests.Models;
 
 namespace AnyServe.ITests
 {
@@ -45,13 +46,13 @@ namespace AnyServe.ITests
             // Arrange (test preparation)
             var product = new Product()
             {
-                id = Guid.NewGuid(),
+                Id = Guid.NewGuid(),
                 Name = "TestProductName",
                 Description = "Test product description"
             };
             var json = JsonConvert.SerializeObject(product);
             var data = new StringContent(json, Encoding.UTF8, "application/json");
-            var urlWithId = url + "/" + product.id;
+            var urlWithId = url + "/" + product.Id;
 
             // Act
             var response = await Client.PostAsync(urlWithId, data);
@@ -63,7 +64,7 @@ namespace AnyServe.ITests
             //Try get stored product
             response = await Client.GetAsync(urlWithId);
             var addedProduct = JsonConvert.DeserializeObject<Product>(await response.Content.ReadAsStringAsync());
-            Assert.Equal(product.id, addedProduct.id);
+            Assert.Equal(product.Id, addedProduct.Id);
         }
 
         [Theory]
