@@ -46,7 +46,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="TestFiles\" />
+    <Resource Include="TestFiles\TestsDB.db">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>

@@ -8,16 +8,23 @@ using System;
 using Newtonsoft.Json;
 using System.Text;
 using AnyServe.ITests.Models;
+using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Configuration;
 
 namespace AnyServe.ITests
 {
-    public class ProductControllerTests
+    public class ProductControllerTests : IDisposable
     {
+        private IConfigurationRoot _config;
         private TestServer _server;
         public HttpClient Client { get; private set; }
 
         public ProductControllerTests()
         {
+            _config = new ConfigurationBuilder()
+                        .SetBasePath(AppContext.BaseDirectory)
+                        .AddJsonFile("appsettings.json", false, true)
+                        .Build();
             SetUpClient();
         }
 
@@ -132,6 +139,23 @@ namespace AnyServe.ITests
 
         #endregion
 
+        #region Dispose implementation
+
+        //Dispose used to clean up resources after tests finished
+        public void Dispose()
+        {
+            //Delete all rows from Product
+            var connectionString = _config.GetConnectionString("ProductsConnectionSqlite");
+            using (var con = new SqliteConnection(connectionString))
+            {
+                con.Open();
+                var deleteAllRows = con.CreateCommand();
+                deleteAllRows.CommandText = "DELETE FROM Product";
+                deleteAllRows.ExecuteNonQuery();
+            }
+        }
+
+        #endregion
 
         #region Private Methods
 
