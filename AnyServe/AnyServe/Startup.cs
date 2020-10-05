@@ -1,25 +1,24 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AnyServe.Providers;
 using AnyServe.Storage;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace AnyServe
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IWebHostEnvironment env)
         {
-            Configuration = configuration;
+            var builder = new ConfigurationBuilder()
+                                .SetBasePath(env.ContentRootPath)
+                                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
+            builder.AddEnvironmentVariables();
+            Configuration = builder.Build();
         }
 
         public IConfiguration Configuration { get; }
@@ -27,7 +26,6 @@ namespace AnyServe
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton(typeof(Storage<>));
             services.
                 AddMvcCore(o => o.Conventions.Add(
                     new AnyServeControllerRouteConvention()
@@ -35,6 +33,9 @@ namespace AnyServe
                 ConfigureApplicationPartManager(m =>
                     m.FeatureProviders.Add(new AnyServeControllerFeatureProvider()
                 ));
+            var connection = Configuration.GetConnectionString("ProductsConnectionSqlite");
+            services.AddDbContext<ApplicationContext>(options => options.UseSqlite(connection));
+            services.AddScoped(typeof(IDataRepository<>), typeof(DataRepository<>));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -53,6 +54,19 @@ namespace AnyServe
             {
                 endpoints.MapControllers();
             });
+
+            try
+            {
+                using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+                {
+                    var context = serviceScope.ServiceProvider.GetRequiredService<ApplicationContext>();
+                    context.Database.EnsureCreated();
+                }
+            }
+            catch
+            {
+                //do nothing for development stage
+            }
         }
     }
 }
