@@ -37,7 +37,7 @@ namespace AnyServe.Providers
                     Debug.WriteLine("Generic controller for: " + candidate.FullName);
                 }
             }
-        
+
         }
     }
 }

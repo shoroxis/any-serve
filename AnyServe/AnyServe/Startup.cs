@@ -55,10 +55,17 @@ namespace AnyServe
                 endpoints.MapControllers();
             });
 
-            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+            try
             {
-                var context = serviceScope.ServiceProvider.GetRequiredService<ApplicationContext>();
-                context.Database.EnsureCreated();
+                using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+                {
+                    var context = serviceScope.ServiceProvider.GetRequiredService<ApplicationContext>();
+                    context.Database.EnsureCreated();
+                }
+            }
+            catch
+            {
+                //do nothing for development stage
             }
         }
     }
