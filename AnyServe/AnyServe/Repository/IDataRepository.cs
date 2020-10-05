@@ -12,7 +12,7 @@ namespace AnyServe.Storage
         T Get(Guid id);
         Task<T> Insert(T entity);
         void Update(T entity);
-        void Delete(T entity);
+        Task<bool> Delete(T entity);
 
     }
 }

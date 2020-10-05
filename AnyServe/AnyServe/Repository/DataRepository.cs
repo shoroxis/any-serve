@@ -49,7 +49,7 @@ namespace AnyServe.Storage
             }
             context.SaveChanges();
         }
-        public void Delete(T entity)
+        public Task<bool> Delete(T entity)
         {
             if (entity == null)
             {
@@ -57,6 +57,9 @@ namespace AnyServe.Storage
             }
             entities.Remove(entity);
             context.SaveChanges();
+
+            //need find better solution what we return
+            return Task.FromResult(true);
         }
 
         #endregion

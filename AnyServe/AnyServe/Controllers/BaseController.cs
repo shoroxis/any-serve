@@ -1,6 +1,8 @@
 ﻿using AnyServe.Models;
 using AnyServe.Storage;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -13,7 +15,7 @@ namespace AnyServe.Controllers
     /// </summary>
     /// <typeparam name="T"></typeparam>
     [Route("api/[controller]")]
-    public class BaseController<T> : Controller where T : BaseModel
+    public class BaseController<T> : Controller where T : BaseModel, new()
     {
         private readonly IDataRepository<T> _storage;
         private readonly ILogger<BaseController<T>> _logger;
@@ -34,11 +36,11 @@ namespace AnyServe.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(Guid id)
         {
-            var result = _storage.GetById(id);
+            var result = _storage.Get(id);
             if(result != null)
                 return Ok(result);
 
-            return NoContent();
+            return NotFound();
         }
 
         [HttpPost("{id}")]
@@ -51,12 +53,25 @@ namespace AnyServe.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var ifModelDeleted = await _storage.Delete(id);
+            //create dummy entity
+            T entityToDelete = new T() { Id = id };
 
-            if (ifModelDeleted)
+            try
+            {
+                await _storage.Delete(entityToDelete);
                 return Ok();
-
-            return NoContent();
+            }
+            catch(DbUpdateConcurrencyException ex)
+            {
+                _logger.LogError($"Delete with id = {id} failed. " + ex.Message);
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Delete with id = {id} failed. " + ex.Message);
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
         }
+
     }
 }

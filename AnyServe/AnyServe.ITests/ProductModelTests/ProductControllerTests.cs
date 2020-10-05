@@ -81,13 +81,13 @@ namespace AnyServe.ITests
             // Arrange (test preparation)
             var product = new Product()
             {
-                id = Guid.NewGuid(),
+                Id = Guid.NewGuid(),
                 Name = "TestProductName",
                 Description = "Test product description"
             };
             var json = JsonConvert.SerializeObject(product);
             var data = new StringContent(json, Encoding.UTF8, "application/json");
-            var urlWithId = url + "/" + product.id;
+            var urlWithId = url + "/" + product.Id;
 
             // Act
             var response = await Client.PostAsync(urlWithId, data);
@@ -100,7 +100,7 @@ namespace AnyServe.ITests
             //Try get stored product
             response = await Client.GetAsync(urlWithId);
             var addedProduct = JsonConvert.DeserializeObject<Product>(await response.Content.ReadAsStringAsync());
-            Assert.Equal(product.id, addedProduct.id);
+            Assert.Equal(product.Id, addedProduct.Id);
 
             //Try Delete stored product
             response = await Client.DeleteAsync(urlWithId);
@@ -110,7 +110,7 @@ namespace AnyServe.ITests
 
             //Try get stored product after deleting 
             response = await Client.GetAsync(urlWithId);
-            Assert.Equal(System.Net.HttpStatusCode.NoContent, response.StatusCode);
+            Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
         }
 
 
@@ -118,22 +118,14 @@ namespace AnyServe.ITests
         [InlineData("/api/product")]
         public async Task Delete_ItemWithNotExistingId_ReturnsSuccess_NoContent(string url)
         {
-            // Arrange (test preparation)
-            var product = new Product()
-            {
-                id = Guid.NewGuid(),
-                Name = "TestProductNameDoesnotExist",
-                Description = "Test product description doesnot exist"
-            };
-            var json = JsonConvert.SerializeObject(product);
-            var data = new StringContent(json, Encoding.UTF8, "application/json");
-            var urlWithId = url + "/" + product.id;
+            // Arrange 
+            var urlWithId = url + "/" + Guid.NewGuid();
 
             // Act
             var response = await Client.DeleteAsync(urlWithId);
 
             // Assert
-            Assert.Equal(System.Net.HttpStatusCode.NoContent, response.StatusCode);
+            Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
 
         }
 
