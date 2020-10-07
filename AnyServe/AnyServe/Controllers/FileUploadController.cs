@@ -73,7 +73,9 @@ namespace AnyServe.Controllers
             {
                 foreach (var uploadedFile in uploads)
                 {
-                    // path to folder Files
+                    // path to folder Files 
+                    //@"./Files/" path from run executing
+                    //TODO: Validate that path exist (or create if not exist)
                     string path = "/Files/" + uploadedFile.FileName;
                     // save file to folder Files in catalog wwwroot
                     using (var fileStream = new FileStream(_appEnvironment.WebRootPath + path, FileMode.Create))
