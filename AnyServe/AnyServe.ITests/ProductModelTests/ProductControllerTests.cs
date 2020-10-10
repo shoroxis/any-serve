@@ -154,7 +154,7 @@ namespace AnyServe.ITests
         private void SetUpClient()
         {
             _server = new TestServer(new WebHostBuilder()
-            .UseStartup<Startup>());
+                        .UseStartup<Startup>());
 
             Client = _server.CreateClient();
         }

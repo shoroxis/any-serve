@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Net;
+using System.Text;
 
 namespace AnyServe.Controllers
 {
@@ -40,21 +41,31 @@ namespace AnyServe.Controllers
         {
             if (uploadedFile != null)
             {
-                // path to folder Files
-                string path = "/Files/" + uploadedFile.FileName;
+                string[] splitedName = (uploadedFile.FileName).Split('.');
+                string fileExtansion = "." + splitedName[1];
+
+                Guid id = Guid.NewGuid();
+
+                // path to folder Files 
+                //@"./Files/" path from run executing
+
+                string partialPath = @"\Files\";
+                if (!Directory.Exists(_appEnvironment.WebRootPath + partialPath))
+                    Directory.CreateDirectory(_appEnvironment.WebRootPath + partialPath);
+
+                string fileName = id + fileExtansion;
+                string fullPath = partialPath + fileName;
+
                 // save file to folder Files in catalog wwwroot
-                using (var fileStream = new FileStream(_appEnvironment.WebRootPath + path, FileMode.Create))
+                using (var fileStream = new FileStream(_appEnvironment.WebRootPath + fullPath, FileMode.Create))
                 {
                     await uploadedFile.CopyToAsync(fileStream);
                 }
 
-                FileModel file = new FileModel { Name = uploadedFile.FileName, Path = path, id = new Guid() };
 
+                FileModel file = new FileModel { Name = fileName, Path = fullPath, Id = id };
 
-                //The request has been accepted for processing, but the processing has not been completed. 
-                //The request might or might not eventually be acted upon, as it might be disallowed when processing actually takes place. 
-                //There is no facility for re-sending a status code from an asynchronous operation such as this.
-                return Accepted();
+                return Ok("File uploaded successfully");
 
             }
 
@@ -73,24 +84,35 @@ namespace AnyServe.Controllers
             {
                 foreach (var uploadedFile in uploads)
                 {
+                    string[] splitedName = (uploadedFile.FileName).Split('.');
+                    string fileExtansion = "." + splitedName[1];
+
+                    Guid id = Guid.NewGuid();
+
                     // path to folder Files 
                     //@"./Files/" path from run executing
-                    //TODO: Validate that path exist (or create if not exist)
-                    string path = "/Files/" + uploadedFile.FileName;
+                    
+                    string partialPath = @"\Files\";
+                    if (!Directory.Exists(_appEnvironment.WebRootPath + partialPath))
+                        Directory.CreateDirectory(_appEnvironment.WebRootPath + partialPath);
+
+                    string fileName = id + fileExtansion;
+                    string fullPath = partialPath + fileName;
+
                     // save file to folder Files in catalog wwwroot
-                    using (var fileStream = new FileStream(_appEnvironment.WebRootPath + path, FileMode.Create))
+                    using (var fileStream = new FileStream(_appEnvironment.WebRootPath + fullPath, FileMode.Create))
                     {
                         await uploadedFile.CopyToAsync(fileStream);
                     }
 
 
-                    FileModel file = new FileModel { Name = uploadedFile.FileName, Path = path, id = new Guid() };
-
+                    FileModel file = new FileModel { Name = fileName, Path = fullPath, Id = id };
+                    //TODO: Need do save file info to DB
                 }
 
                 // TODO
                 // Need to check if files are saved
-                return Accepted();
+                return Ok("All files uploaded successfully");
             }
 
             //TODO
