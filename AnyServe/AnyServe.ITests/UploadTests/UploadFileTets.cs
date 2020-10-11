@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.TestHost;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.IO;
+using System;
 
 namespace AnyServe.ITests
 {
@@ -51,6 +52,9 @@ namespace AnyServe.ITests
 
             var responseString = await response.Content.ReadAsStringAsync();
 
+            //Guid id = Guid.NewGuid();
+            var urlDelete = "/api/Media/" + "51bc656f-4bbc-496e-83d2-6b7bc521a583";
+            response = await Client.DeleteAsync(urlDelete);
             //Assert.NotEmpty(responseString);
             Assert.Equal(expectedContentType, response.Content.Headers.ContentType.ToString());
             //Assert.Equal("application/json; charset=utf-8",

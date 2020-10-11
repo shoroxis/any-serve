@@ -11,11 +11,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text;
+using System.Collections;
 
 namespace AnyServe.Controllers
 {
     [Route("api/[controller]")]
-    public class MediaController : Controller 
+    public class MediaController : Controller
     {
         //private Storage<T> _storage;
         //private readonly ILogger<BaseController<T>> _logger;
@@ -32,7 +33,9 @@ namespace AnyServe.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-            return Ok("Hello");
+            string filesPath = _appEnvironment.WebRootPath + "\\Files";
+
+            return Ok(AllFilesInWebRootPath(filesPath));
         }
 
         // Single file upload
@@ -65,7 +68,7 @@ namespace AnyServe.Controllers
 
                 FileModel file = new FileModel { Name = fileName, Path = fullPath, Id = id };
 
-                return Ok("File uploaded successfully");
+                return Ok(id);
 
             }
 
@@ -78,10 +81,11 @@ namespace AnyServe.Controllers
 
         // Multiple files upload
         [HttpPost("UploadFiles")]
-        public async Task<IActionResult> UploadFile( List<IFormFile> uploads)
+        public async Task<IActionResult> UploadFile(List<IFormFile> uploads)
         {
             if (uploads != null)
             {
+                
                 foreach (var uploadedFile in uploads)
                 {
                     string[] splitedName = (uploadedFile.FileName).Split('.');
@@ -91,7 +95,7 @@ namespace AnyServe.Controllers
 
                     // path to folder Files 
                     //@"./Files/" path from run executing
-                    
+
                     string partialPath = @"\Files\";
                     if (!Directory.Exists(_appEnvironment.WebRootPath + partialPath))
                         Directory.CreateDirectory(_appEnvironment.WebRootPath + partialPath);
@@ -112,12 +116,64 @@ namespace AnyServe.Controllers
 
                 // TODO
                 // Need to check if files are saved
-                return Ok("All files uploaded successfully");
+                return Ok("All file successfully uploaded");
             }
 
             //TODO
             // Need to deside what return then file is not in Form
             return Ok("Unable to upload one or more files");
         }
+
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteFile(Guid id)
+        {
+            if (id != null)
+            {
+                bool isFileDeleted = false;
+
+                // To convert to async fanction
+                await Task.FromResult( isFileDeleted = PhysicalDeleteFile(id) );//"51bc656f-4bbc-496e-83d2-6b7bc521a583"
+
+                if (isFileDeleted)
+                    return Ok();
+            }
+
+            return NotFound();
+        }
+
+
+        #region private function for HttpDelete
+        //Function created for Task
+        private bool PhysicalDeleteFile(Guid id)
+        {
+            //Colect all files in directory
+            var allFilesInFolder = Directory.EnumerateFiles(_appEnvironment.WebRootPath + "\\Files");
+
+            //Find file with id in name
+            var fileToDelete = allFilesInFolder.FirstOrDefault(f => Path.GetFileName(f).Contains(id.ToString()));
+
+            //Delete file
+            if (fileToDelete != null)
+            {
+                System.IO.File.Delete(fileToDelete);
+                return true;
+            }
+
+            return false;
+        }
+
+        #endregion
+
+        #region private function for HttpGet
+        private IEnumerable AllFilesInWebRootPath(string directoryPath)
+        {
+            if(Directory.Exists(directoryPath))
+                return Directory.EnumerateFiles(directoryPath);//_appEnvironment.WebRootPath + "\\Files"
+
+            return null;
+        }
+
+        #endregion
     }
 }
