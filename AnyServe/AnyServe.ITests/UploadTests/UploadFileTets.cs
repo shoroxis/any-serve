@@ -22,6 +22,31 @@ namespace AnyServe.ITests
         #region Tests
 
         [Theory]
+        [InlineData("/api/Media")]
+        public async Task GetAll_ReturnExistedFilesAndSuccess(string url)
+        {
+            // Arrange (test preparation)
+            var expectedContentType = "application/json; charset=utf-8";
+
+            // Act
+            HttpResponseMessage response;
+
+            response = await Client.GetAsync(url);
+            
+
+            // Assert
+            response.EnsureSuccessStatusCode(); // Status Code 200-299
+
+            var responseString = await response.Content.ReadAsStringAsync();
+
+
+            //Assert.NotEmpty(responseString);
+            Assert.Equal(expectedContentType, response.Content.Headers.ContentType.ToString());
+            //Assert.Equal("application/json; charset=utf-8",
+            //response.Content.Headers.ContentType.ToString());
+        }
+
+        [Theory]
         [InlineData("/api/Media/uploadfiles")]
         public async Task Upload_SavesFileAndReturnSuccess(string url)
         {
