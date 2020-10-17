@@ -65,10 +65,10 @@ namespace AnyServe.Controllers
                     await uploadedFile.CopyToAsync(fileStream);
                 }
 
-
+                //add following instance to db
                 FileModel file = new FileModel { Name = fileName, Path = fullPath, Id = id };
-
-                return Ok(id);
+             
+                return Ok(new FileModelResponse(file));
 
             }
 
@@ -85,14 +85,15 @@ namespace AnyServe.Controllers
         {
             if (uploads != null)
             {
-                
+                List<FileModel> fileToDB = new List<FileModel>();
+                List<FileModelResponse> filesResponse = new List<FileModelResponse>();
                 foreach (var uploadedFile in uploads)
                 {
                     string[] splitedName = (uploadedFile.FileName).Split('.');
                     string fileExtansion = "." + splitedName[1];
 
                     Guid id = Guid.NewGuid();
-
+                    
                     // path to folder Files 
                     //@"./Files/" path from run executing
 
@@ -107,16 +108,22 @@ namespace AnyServe.Controllers
                     using (var fileStream = new FileStream(_appEnvironment.WebRootPath + fullPath, FileMode.Create))
                     {
                         await uploadedFile.CopyToAsync(fileStream);
+
+                        var newFile = new FileModel { Name = fileName, Path = fullPath, Id = id, OriginalName = uploadedFile.FileName };
+                        
+                        //Adding to file for DB
+                        fileToDB.Add(newFile);
+
+                        //Adding file to response list
+                        filesResponse.Add(new FileModelResponse(newFile));
                     }
 
-
-                    FileModel file = new FileModel { Name = fileName, Path = fullPath, Id = id };
                     //TODO: Need do save file info to DB
                 }
 
                 // TODO
                 // Need to check if files are saved
-                return Ok("All file successfully uploaded");
+                return Ok(filesResponse);
             }
 
             //TODO
@@ -168,8 +175,9 @@ namespace AnyServe.Controllers
         #region private function for HttpGet
         private IEnumerable AllFilesInWebRootPath(string directoryPath)
         {
-            if(Directory.Exists(directoryPath))
-                return Directory.EnumerateFiles(directoryPath);//_appEnvironment.WebRootPath + "\\Files"
+            if (Directory.Exists(directoryPath))
+                //return Enamerable string of files
+                return Directory.EnumerateFiles(directoryPath).Select(Path.GetFileName);
 
             return null;
         }
