@@ -66,7 +66,7 @@ namespace AnyServe.Controllers
                 }
 
                 //add following instance to db
-                FileModel file = new FileModel { Name = fileName, Path = fullPath, Id = id };
+                FileModel file = new FileModel { Name = fileName, Path = fullPath, Id = id, OriginalName = uploadedFile.FileName };
              
                 return Ok(new FileModelResponse(file));
 

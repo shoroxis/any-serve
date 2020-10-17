@@ -51,9 +51,79 @@ namespace AnyServe.ITests
             //response.Content.Headers.ContentType.ToString());
         }
 
+
+        [Theory]
+        [InlineData("/api/Media/uploadfile")]
+        public async Task Upload_SaveIngleFileReturnSuccessThenDeleteFileAndCheckIfItlDeleted(string url)
+        {
+            // Arrange (test preparation)
+            string fileName = "text_4.txt";
+            var expectedContentType = "application/json; charset=utf-8";
+
+            // Act
+            HttpResponseMessage response;
+
+            using (var file1 = File.OpenRead(@"UploadTests\TestFiles\text_1.txt"))
+            using (var content1 = new StreamContent(file1))
+            using (var formData = new MultipartFormDataContent())
+            {
+                // Add file (file, field name, file name)
+                formData.Add(content1, "uploadedFile", fileName);
+
+                response = await Client.PostAsync(url, formData);
+            }
+
+            // Assert
+            response.EnsureSuccessStatusCode(); // Status Code 200-299
+
+            var responseString = await response.Content.ReadAsStringAsync();
+            var singleFile = JsonConvert.DeserializeObject<FileModelResponse>(await response.Content.ReadAsStringAsync());
+            
+            //Checking not existed file name
+            Assert.False(singleFile.OriginalName == "file_not_exist.txt");
+
+            //Checking what all files were uploaded
+            Assert.True(singleFile.OriginalName == fileName && singleFile.Id != null);
+
+            //TODO: Check response
+            string urlGET = "/api/Media";
+
+            response = await Client.GetAsync(urlGET);
+
+            //Recive file
+            int expectedFileNumbers = 1;
+
+            //Checkin number of files 
+            //Assert.Equal(expectedFileNumbers, listOfFiles.Count<string>());//Have to FIX
+
+            //Deleting all files to keep folder clear
+            var urlDelete = urlGET + "/" + singleFile.Id;
+
+            response = await Client.DeleteAsync(urlDelete);
+
+            response.EnsureSuccessStatusCode();
+            Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+
+            //Checking delete response then file not found
+            response = await Client.DeleteAsync(urlDelete);
+
+            //response.EnsureSuccessStatusCode();
+            Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+
+            //Checking delete response then file not found
+            //Check if no file exist
+            response = await Client.GetAsync(urlGET);
+
+            //responseString = await response.Content.ReadAsStringAsync();
+
+            //TODO:FIX
+            Assert.Empty(JsonConvert.DeserializeObject<IEnumerable<FileModelResponse>>(await response.Content.ReadAsStringAsync()));
+
+        }
+
         [Theory]
         [InlineData("/api/Media/uploadfiles")]
-        public async Task Upload_SavesFileAndReturnSuccess(string url)
+        public async Task Upload_SaveFilesAndReturnSuccessThenDeleteAllFilesAndCheckIfAllDeleted(string url)
         {
             // Arrange (test preparation)
             string[] listFileName = { "text_1.txt", "text_2.txt", "text_3.txt" };
@@ -85,7 +155,7 @@ namespace AnyServe.ITests
             var listOfFiles = JsonConvert.DeserializeObject<IEnumerable<FileModelResponse>>(await response.Content.ReadAsStringAsync());
 
             //Checking not existed file name
-            Assert.Null(listOfFiles.FirstOrDefault(f => f.OriginalName == "text_222.txt"));
+            Assert.Null(listOfFiles.FirstOrDefault(f => f.OriginalName == "file_not_exist.txt"));
 
             //Checking what all files were uploaded
             foreach(string fileName in listFileName)
