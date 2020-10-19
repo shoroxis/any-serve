@@ -12,61 +12,54 @@ using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text;
 using System.Collections;
+using AnyServe.Utility;
 
 namespace AnyServe.Controllers
 {
     [Route("api/[controller]")]
     public class MediaController : Controller
     {
-        //private Storage<T> _storage;
-        //private readonly ILogger<BaseController<T>> _logger;
         private IWebHostEnvironment _appEnvironment;
 
-        public MediaController(/*Storage<T> storage, ILogger<BaseController<T>> logger,*/ IWebHostEnvironment appEnviroment)
+        public MediaController( IWebHostEnvironment appEnviroment)
         {
-            //_storage = storage;
-            //_logger = logger;
-            //_logger.LogInformation("UploadController created");
             _appEnvironment = appEnviroment;
         }
 
         [HttpGet]
         public IActionResult Get()
         {
-            string filesPath = _appEnvironment.WebRootPath + "\\Files";
+            var stringUtility = new StringUtility();
+            string pathToFiles = _appEnvironment.WebRootPath + stringUtility.directoryName;
 
-            return Ok(AllFilesInWebRootPath(filesPath));
+            return Ok(AllFilesInWebRootPath(pathToFiles));
         }
 
         // Single file upload
         [HttpPost("UploadFile")]
         public async Task<IActionResult> UploadFile([FromForm] IFormFile uploadedFile)
         {
-            if (uploadedFile != null)
+            if (uploadedFile != null && Path.GetExtension(uploadedFile.FileName) != null)
             {
-                string[] splitedName = (uploadedFile.FileName).Split('.');
-                string fileExtansion = "." + splitedName[1];
+                var helper = new StringUtility();
+                var uploadsRootFolder = Path.Combine(_appEnvironment.WebRootPath, "Files");
+
+                if (!Directory.Exists(uploadsRootFolder))
+                    Directory.CreateDirectory(uploadsRootFolder);
 
                 Guid id = Guid.NewGuid();
 
-                // path to folder Files 
-                //@"./Files/" path from run executing
-
-                string partialPath = @"\Files\";
-                if (!Directory.Exists(_appEnvironment.WebRootPath + partialPath))
-                    Directory.CreateDirectory(_appEnvironment.WebRootPath + partialPath);
-
-                string fileName = id + fileExtansion;
-                string fullPath = partialPath + fileName;
+                string fileName = id + Path.GetExtension(uploadedFile.FileName); ;
+                string fullFilePath = uploadsRootFolder + fileName;
 
                 // save file to folder Files in catalog wwwroot
-                using (var fileStream = new FileStream(_appEnvironment.WebRootPath + fullPath, FileMode.Create))
+                using (var fileStream = new FileStream(fullFilePath, FileMode.Create))
                 {
                     await uploadedFile.CopyToAsync(fileStream);
                 }
 
                 //add following instance to db
-                FileModel file = new FileModel { Name = fileName, Path = fullPath, Id = id, OriginalName = uploadedFile.FileName };
+                FileModel file = new FileModel { Name = fileName, Path = fullFilePath, Id = id, OriginalName = uploadedFile.FileName };
              
                 return Ok(new FileModelResponse(file));
 
@@ -81,25 +74,24 @@ namespace AnyServe.Controllers
 
         // Multiple files upload
         [HttpPost("UploadFiles")]
-        public async Task<IActionResult> UploadFile(List<IFormFile> uploads)
+        public async Task<IActionResult> UploadFiles(List<IFormFile> uploads)
         {
             if (uploads != null)
             {
                 List<FileModel> fileToDB = new List<FileModel>();
                 List<FileModelResponse> filesResponse = new List<FileModelResponse>();
+
+                string partialPath = @"\Files\";
+                if (!Directory.Exists(_appEnvironment.WebRootPath + partialPath))
+                    Directory.CreateDirectory(_appEnvironment.WebRootPath + partialPath);
+
                 foreach (var uploadedFile in uploads)
                 {
+                    
                     string[] splitedName = (uploadedFile.FileName).Split('.');
                     string fileExtansion = "." + splitedName[1];
 
                     Guid id = Guid.NewGuid();
-                    
-                    // path to folder Files 
-                    //@"./Files/" path from run executing
-
-                    string partialPath = @"\Files\";
-                    if (!Directory.Exists(_appEnvironment.WebRootPath + partialPath))
-                        Directory.CreateDirectory(_appEnvironment.WebRootPath + partialPath);
 
                     string fileName = id + fileExtansion;
                     string fullPath = partialPath + fileName;
@@ -140,7 +132,7 @@ namespace AnyServe.Controllers
                 bool isFileDeleted = false;
 
                 // To convert to async fanction
-                await Task.FromResult( isFileDeleted = PhysicalDeleteFile(id) );//"51bc656f-4bbc-496e-83d2-6b7bc521a583"
+                await Task.FromResult( isFileDeleted = PhysicalDeleteFile(id) );
 
                 if (isFileDeleted)
                     return Ok();

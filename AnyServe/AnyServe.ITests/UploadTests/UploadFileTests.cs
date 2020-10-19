@@ -10,16 +10,17 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using AnyServe.Models;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using AnyServe.ITests.UploadTests;
 
 namespace AnyServe.ITests
 {
-    public class UploadFileTets
+    public class UploadFileTests
     {
 
         private TestServer _server;
         public HttpClient Client { get; private set; }
 
-        public UploadFileTets()
+        public UploadFileTests()
         {
             SetUpClient();
         }
@@ -45,25 +46,26 @@ namespace AnyServe.ITests
             var responseString = await response.Content.ReadAsStringAsync();
 
 
-            //Assert.NotEmpty(responseString);
             Assert.Equal(expectedContentType, response.Content.Headers.ContentType.ToString());
-            //Assert.Equal("application/json; charset=utf-8",
-            //response.Content.Headers.ContentType.ToString());
+
         }
 
 
         [Theory]
         [InlineData("/api/Media/uploadfile")]
-        public async Task Upload_SaveIngleFileReturnSuccessThenDeleteFileAndCheckIfItlDeleted(string url)
+        //Description:
+        //That test checking upload mechanism for single file and then delete it from host
+        public async Task Upload_SingleFileAndReturnSuccess(string url)
         {
             // Arrange (test preparation)
+            var helper = new StringHelper();
             string fileName = "text_4.txt";
             var expectedContentType = "application/json; charset=utf-8";
 
             // Act
             HttpResponseMessage response;
 
-            using (var file1 = File.OpenRead(@"UploadTests\TestFiles\text_1.txt"))
+            using (var file1 = File.OpenRead(@"UploadTests\TestFiles\" + fileName))
             using (var content1 = new StreamContent(file1))
             using (var formData = new MultipartFormDataContent())
             {
@@ -76,56 +78,43 @@ namespace AnyServe.ITests
             // Assert
             response.EnsureSuccessStatusCode(); // Status Code 200-299
 
-            var responseString = await response.Content.ReadAsStringAsync();
+            Assert.Equal(expectedContentType, response.Content.Headers.ContentType.ToString());
+
             var singleFile = JsonConvert.DeserializeObject<FileModelResponse>(await response.Content.ReadAsStringAsync());
             
             //Checking not existed file name
-            Assert.False(singleFile.OriginalName == "file_not_exist.txt");
+            Assert.False(singleFile.OriginalName == helper.fileNameNotExist);
 
             //Checking what all files were uploaded
             Assert.True(singleFile.OriginalName == fileName && singleFile.Id != null);
 
-            //TODO: Check response
-            string urlGET = "/api/Media";
 
-            response = await Client.GetAsync(urlGET);
-
-            //Recive file
-            int expectedFileNumbers = 1;
-
-            //Checkin number of files 
-            //Assert.Equal(expectedFileNumbers, listOfFiles.Count<string>());//Have to FIX
-
-            //Deleting all files to keep folder clear
-            var urlDelete = urlGET + "/" + singleFile.Id;
-
-            response = await Client.DeleteAsync(urlDelete);
+            //Delete file to keep folder clear
+            response = await Client.DeleteAsync(helper.urlDelete + singleFile.Id);
 
             response.EnsureSuccessStatusCode();
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 
             //Checking delete response then file not found
-            response = await Client.DeleteAsync(urlDelete);
+            response = await Client.DeleteAsync(helper.urlDelete + singleFile.Id);
 
-            //response.EnsureSuccessStatusCode();
             Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
 
             //Checking delete response then file not found
             //Check if no file exist
-            response = await Client.GetAsync(urlGET);
+            response = await Client.GetAsync(helper.urlGET);
 
-            //responseString = await response.Content.ReadAsStringAsync();
 
-            //TODO:FIX
             Assert.Empty(JsonConvert.DeserializeObject<IEnumerable<FileModelResponse>>(await response.Content.ReadAsStringAsync()));
 
         }
 
         [Theory]
         [InlineData("/api/Media/uploadfiles")]
-        public async Task Upload_SaveFilesAndReturnSuccessThenDeleteAllFilesAndCheckIfAllDeleted(string url)
+        public async Task Upload_ThreeFilesAndReturnSuccessThenDeleteAllFilesAndCheckIfAllDeleted(string url)
         {
             // Arrange (test preparation)
+            var helper = new StringHelper();
             string[] listFileName = { "text_1.txt", "text_2.txt", "text_3.txt" };
             var expectedContentType = "application/json; charset=utf-8";
 
@@ -141,9 +130,9 @@ namespace AnyServe.ITests
             using (var formData = new MultipartFormDataContent())
             {
                 // Add file (file, field name, file name)
-                formData.Add(content1, "uploads", "text_1.txt");
-                formData.Add(content2, "uploads", "text_2.txt");
-                formData.Add(content3, "uploads", "text_3.txt");
+                formData.Add(content1, "uploads", listFileName[0]);
+                formData.Add(content2, "uploads", listFileName[1]);
+                formData.Add(content3, "uploads", listFileName[2]);
 
                 response = await Client.PostAsync(url, formData);
             }
@@ -151,40 +140,34 @@ namespace AnyServe.ITests
             // Assert
             response.EnsureSuccessStatusCode(); // Status Code 200-299
 
-            var responseString = await response.Content.ReadAsStringAsync();
+            Assert.Equal(expectedContentType, response.Content.Headers.ContentType.ToString());
+
             var listOfFiles = JsonConvert.DeserializeObject<IEnumerable<FileModelResponse>>(await response.Content.ReadAsStringAsync());
 
             //Checking not existed file name
-            Assert.Null(listOfFiles.FirstOrDefault(f => f.OriginalName == "file_not_exist.txt"));
+            Assert.Null(listOfFiles.FirstOrDefault(f => f.OriginalName == helper.fileNameNotExist));
 
             //Checking what all files were uploaded
             foreach(string fileName in listFileName)
                 Assert.NotNull(listOfFiles.FirstOrDefault(f => (f.OriginalName == fileName && f.Id != null)));
 
-            //TODO: Check response
-            string urlGET = "/api/Media";
 
-            response = await Client.GetAsync(urlGET);
-
-            //Recive all files
-            //var listOfFiles = JsonConvert.DeserializeObject<IEnumerable<string>>( await response.Content.ReadAsStringAsync());
             int expectedFileNumbers = 3;
 
             //Checkin number of files 
-            //Assert.Equal(expectedFileNumbers, listOfFiles.Count<string>());//Have to FIX
+            Assert.Equal(expectedFileNumbers, listOfFiles.Count<FileModelResponse>());
 
             //Deleting all files to keep folder clear
             foreach (var file in listOfFiles)
             {
-                var urlDelete = urlGET + "/" + file.Id;
 
-                response = await Client.DeleteAsync(urlDelete);
+                response = await Client.DeleteAsync(helper.urlDelete + file.Id);
 
                 response.EnsureSuccessStatusCode();
                 Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 
                 //Checking delete response then file not found
-                response = await Client.DeleteAsync(urlDelete);
+                response = await Client.DeleteAsync(helper.urlDelete + file.Id);
 
                 //response.EnsureSuccessStatusCode();
                 Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
@@ -192,11 +175,8 @@ namespace AnyServe.ITests
 
             //Checking delete response then file not found
             //Check if no file exist
-            response = await Client.GetAsync(urlGET);
+            response = await Client.GetAsync(helper.urlGET);
 
-            //responseString = await response.Content.ReadAsStringAsync();
-
-           //TODO:FIX
             Assert.Empty(JsonConvert.DeserializeObject<IEnumerable<FileModelResponse>>(await response.Content.ReadAsStringAsync()));
 
         }
