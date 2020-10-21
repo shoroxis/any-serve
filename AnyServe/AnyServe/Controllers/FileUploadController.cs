@@ -20,17 +20,17 @@ namespace AnyServe.Controllers
     public class MediaController : Controller
     {
         private IWebHostEnvironment _appEnvironment;
-
+        private ConstantString _helper;
         public MediaController( IWebHostEnvironment appEnviroment)
         {
             _appEnvironment = appEnviroment;
+            _helper = new ConstantString();
         }
 
         [HttpGet]
-        public IActionResult Get()
+        public IActionResult GetAllFiles()
         {
-            var stringUtility = new StringUtility();
-            string pathToFiles = _appEnvironment.WebRootPath + stringUtility.directoryName;
+            string pathToFiles = Path.Combine(_appEnvironment.WebRootPath, _helper.directoryName);
 
             return Ok(AllFilesInWebRootPath(pathToFiles));
         }
@@ -41,15 +41,15 @@ namespace AnyServe.Controllers
         {
             if (uploadedFile != null && Path.GetExtension(uploadedFile.FileName) != null)
             {
-                var helper = new StringUtility();
-                var uploadsRootFolder = Path.Combine(_appEnvironment.WebRootPath, "Files");
+                var uploadsRootFolder = Path.Combine(_appEnvironment.WebRootPath, _helper.directoryName);
 
                 if (!Directory.Exists(uploadsRootFolder))
                     Directory.CreateDirectory(uploadsRootFolder);
 
                 Guid id = Guid.NewGuid();
 
-                string fileName = id + Path.GetExtension(uploadedFile.FileName); ;
+                //new unique file name
+                string fileName = id + Path.GetExtension(uploadedFile.FileName);
                 string fullFilePath = uploadsRootFolder + fileName;
 
                 // save file to folder Files in catalog wwwroot
@@ -68,7 +68,7 @@ namespace AnyServe.Controllers
 
             //TODO
             // Need to deside what return then file is not in Form
-            return Ok("Unable to upload file");
+            return BadRequest("Unable to upload file");
         }
 
 
@@ -81,27 +81,26 @@ namespace AnyServe.Controllers
                 List<FileModel> fileToDB = new List<FileModel>();
                 List<FileModelResponse> filesResponse = new List<FileModelResponse>();
 
-                string partialPath = @"\Files\";
-                if (!Directory.Exists(_appEnvironment.WebRootPath + partialPath))
-                    Directory.CreateDirectory(_appEnvironment.WebRootPath + partialPath);
+                //Path for wwwroot\Files
+                var uploadsRootFolder = Path.Combine(_appEnvironment.WebRootPath, _helper.directoryName);
+
+                if (!Directory.Exists(uploadsRootFolder))
+                    Directory.CreateDirectory(uploadsRootFolder);
 
                 foreach (var uploadedFile in uploads)
                 {
-                    
-                    string[] splitedName = (uploadedFile.FileName).Split('.');
-                    string fileExtansion = "." + splitedName[1];
-
                     Guid id = Guid.NewGuid();
 
-                    string fileName = id + fileExtansion;
-                    string fullPath = partialPath + fileName;
+                    //new unique file name
+                    string fileName = id + Path.GetExtension(uploadedFile.FileName);
+                    string fullFilePath = uploadsRootFolder + fileName;
 
-                    // save file to folder Files in catalog wwwroot
-                    using (var fileStream = new FileStream(_appEnvironment.WebRootPath + fullPath, FileMode.Create))
+                    // save file to folder Files to catalog wwwroot\Files
+                    using (var fileStream = new FileStream(fullFilePath, FileMode.Create))
                     {
                         await uploadedFile.CopyToAsync(fileStream);
 
-                        var newFile = new FileModel { Name = fileName, Path = fullPath, Id = id, OriginalName = uploadedFile.FileName };
+                        var newFile = new FileModel { Name = fileName, Path = fullFilePath, Id = id, OriginalName = uploadedFile.FileName };
                         
                         //Adding to file for DB
                         fileToDB.Add(newFile);
@@ -120,7 +119,7 @@ namespace AnyServe.Controllers
 
             //TODO
             // Need to deside what return then file is not in Form
-            return Ok("Unable to upload one or more files");
+            return BadRequest("Unable to upload one or more files");
         }
 
 
@@ -147,7 +146,7 @@ namespace AnyServe.Controllers
         private bool PhysicalDeleteFile(Guid id)
         {
             //Colect all files in directory
-            var allFilesInFolder = Directory.EnumerateFiles(_appEnvironment.WebRootPath + "\\Files");
+            var allFilesInFolder = Directory.EnumerateFiles(Path.Combine(_appEnvironment.WebRootPath, _helper.directoryName));
 
             //Find file with id in name
             var fileToDelete = allFilesInFolder.FirstOrDefault(f => Path.GetFileName(f).Contains(id.ToString()));
