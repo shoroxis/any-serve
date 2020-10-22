@@ -20,48 +20,39 @@ namespace AnyServe.Controllers
     public class MediaController : Controller
     {
         private IWebHostEnvironment _appEnvironment;
-        private ConstantString _helper;
+
         public MediaController( IWebHostEnvironment appEnviroment)
         {
             _appEnvironment = appEnviroment;
-            _helper = new ConstantString();
         }
 
         [HttpGet]
         public IActionResult GetAllFiles()
         {
-            string pathToFiles = Path.Combine(_appEnvironment.WebRootPath, _helper.directoryName);
+            string uploadsRootFolder = Path.Combine(_appEnvironment.WebRootPath, ConstantString.directoryName);
+            if (!Directory.Exists(uploadsRootFolder))
+                Directory.CreateDirectory(uploadsRootFolder);
 
-            return Ok(AllFilesInWebRootPath(pathToFiles));
+            return Ok(AllFilesInWebRootPath(uploadsRootFolder));
         }
 
         // Single file upload
         [HttpPost("UploadFile")]
-        public async Task<IActionResult> UploadFile([FromForm] IFormFile uploadedFile)
+        public async Task<IActionResult> UploadFile([FromForm] IFormFile upload)
         {
-            if (uploadedFile != null && Path.GetExtension(uploadedFile.FileName) != null)
+            if (upload != null && Path.GetExtension(upload.FileName) != null)
             {
-                var uploadsRootFolder = Path.Combine(_appEnvironment.WebRootPath, _helper.directoryName);
+                List<FileModel> fileToDB = new List<FileModel>();
+                List<FileModelResponse> filesResponse = new List<FileModelResponse>();
+
+                var uploadsRootFolder = Path.Combine(_appEnvironment.WebRootPath, ConstantString.directoryName);
 
                 if (!Directory.Exists(uploadsRootFolder))
                     Directory.CreateDirectory(uploadsRootFolder);
 
-                Guid id = Guid.NewGuid();
+                await UploadAndSave(upload, uploadsRootFolder, fileToDB, filesResponse);
 
-                //new unique file name
-                string fileName = id + Path.GetExtension(uploadedFile.FileName);
-                string fullFilePath = uploadsRootFolder + fileName;
-
-                // save file to folder Files in catalog wwwroot
-                using (var fileStream = new FileStream(fullFilePath, FileMode.Create))
-                {
-                    await uploadedFile.CopyToAsync(fileStream);
-                }
-
-                //add following instance to db
-                FileModel file = new FileModel { Name = fileName, Path = fullFilePath, Id = id, OriginalName = uploadedFile.FileName };
-             
-                return Ok(new FileModelResponse(file));
+                return Ok(filesResponse.First());
 
             }
 
@@ -71,6 +62,7 @@ namespace AnyServe.Controllers
             return BadRequest("Unable to upload file");
         }
 
+        
 
         // Multiple files upload
         [HttpPost("UploadFiles")]
@@ -82,32 +74,14 @@ namespace AnyServe.Controllers
                 List<FileModelResponse> filesResponse = new List<FileModelResponse>();
 
                 //Path for wwwroot\Files
-                var uploadsRootFolder = Path.Combine(_appEnvironment.WebRootPath, _helper.directoryName);
+                var uploadsRootFolder = Path.Combine(_appEnvironment.WebRootPath, ConstantString.directoryName);
 
                 if (!Directory.Exists(uploadsRootFolder))
                     Directory.CreateDirectory(uploadsRootFolder);
 
-                foreach (var uploadedFile in uploads)
+                foreach (var upload in uploads)
                 {
-                    Guid id = Guid.NewGuid();
-
-                    //new unique file name
-                    string fileName = id + Path.GetExtension(uploadedFile.FileName);
-                    string fullFilePath = uploadsRootFolder + fileName;
-
-                    // save file to folder Files to catalog wwwroot\Files
-                    using (var fileStream = new FileStream(fullFilePath, FileMode.Create))
-                    {
-                        await uploadedFile.CopyToAsync(fileStream);
-
-                        var newFile = new FileModel { Name = fileName, Path = fullFilePath, Id = id, OriginalName = uploadedFile.FileName };
-                        
-                        //Adding to file for DB
-                        fileToDB.Add(newFile);
-
-                        //Adding file to response list
-                        filesResponse.Add(new FileModelResponse(newFile));
-                    }
+                    await UploadAndSave(upload, uploadsRootFolder, fileToDB, filesResponse);
 
                     //TODO: Need do save file info to DB
                 }
@@ -146,7 +120,7 @@ namespace AnyServe.Controllers
         private bool PhysicalDeleteFile(Guid id)
         {
             //Colect all files in directory
-            var allFilesInFolder = Directory.EnumerateFiles(Path.Combine(_appEnvironment.WebRootPath, _helper.directoryName));
+            var allFilesInFolder = Directory.EnumerateFiles(Path.Combine(_appEnvironment.WebRootPath, ConstantString.directoryName));
 
             //Find file with id in name
             var fileToDelete = allFilesInFolder.FirstOrDefault(f => Path.GetFileName(f).Contains(id.ToString()));
@@ -171,6 +145,33 @@ namespace AnyServe.Controllers
                 return Directory.EnumerateFiles(directoryPath).Select(Path.GetFileName);
 
             return null;
+        }
+
+        #endregion
+
+        #region private func for Upload File
+
+        private async Task UploadAndSave(IFormFile uploadedFile, string uploadsRootFolder, List<FileModel> fileToDB, List<FileModelResponse> filesResponse)
+        {
+            Guid id = Guid.NewGuid();
+
+            //new unique file name
+            string fileName = id + Path.GetExtension(uploadedFile.FileName);
+            string fullFilePath = uploadsRootFolder + fileName;
+
+            // save file to folder Files in catalog wwwroot
+            using (var fileStream = new FileStream(fullFilePath, FileMode.Create))
+            {
+                await uploadedFile.CopyToAsync(fileStream);
+
+                var newFile = new FileModel { Name = fileName, Path = fullFilePath, Id = id, OriginalName = uploadedFile.FileName };
+
+                //Adding to file for DB
+                fileToDB.Add(newFile);
+
+                //Adding file to response list
+                filesResponse.Add(new FileModelResponse(newFile));
+            }
         }
 
         #endregion

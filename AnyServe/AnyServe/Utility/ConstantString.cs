@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace AnyServe.Utility
 {
-    public class ConstantString
+    static class ConstantString
     {
         //Directory name for folder where uploaded file is located
-        public readonly string directoryName = @"Files\";
+        public const string directoryName = @"Files\";
     }
 }
