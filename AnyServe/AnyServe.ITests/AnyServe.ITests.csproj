@@ -29,6 +29,28 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="UploadTests\TestFiles\text_1.txt" />
+    <None Remove="UploadTests\TestFiles\text_2.txt" />
+    <None Remove="UploadTests\TestFiles\text_3.txt" />
+    <None Remove="UploadTests\TestFiles\text_4.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="UploadTests\TestFiles\text_1.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="UploadTests\TestFiles\text_2.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="UploadTests\TestFiles\text_3.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="UploadTests\TestFiles\text_4.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="3.1.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.0-rc.1.20451.13">
       <PrivateAssets>all</PrivateAssets>
