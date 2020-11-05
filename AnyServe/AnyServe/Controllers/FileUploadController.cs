@@ -20,10 +20,12 @@ namespace AnyServe.Controllers
     public class MediaController : Controller
     {
         private IWebHostEnvironment _appEnvironment;
+        private readonly ILogger<MediaController> _logger;
 
-        public MediaController( IWebHostEnvironment appEnviroment)
+        public MediaController(IWebHostEnvironment appEnviroment, ILogger<MediaController> logger)
         {
             _appEnvironment = appEnviroment;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -62,7 +64,7 @@ namespace AnyServe.Controllers
             return BadRequest("Unable to upload file");
         }
 
-        
+
 
         // Multiple files upload
         [HttpPost("UploadFiles")]
@@ -102,13 +104,14 @@ namespace AnyServe.Controllers
         {
             if (id != null)
             {
-                bool isFileDeleted = false;
-
                 // To convert to async fanction
-                await Task.FromResult( isFileDeleted = PhysicalDeleteFile(id) );
+                bool isFileDeleted = await PhysicalDeleteFile(id);
 
                 if (isFileDeleted)
+                {
                     return Ok();
+                }
+
             }
 
             return NotFound();
@@ -117,22 +120,35 @@ namespace AnyServe.Controllers
 
         #region private function for HttpDelete
         //Function created for Task
-        private bool PhysicalDeleteFile(Guid id)
+        private async Task<bool> PhysicalDeleteFile(Guid id)
         {
-            //Colect all files in directory
-            var allFilesInFolder = Directory.EnumerateFiles(Path.Combine(_appEnvironment.WebRootPath, ConstantString.directoryName));
-
-            //Find file with id in name
-            var fileToDelete = allFilesInFolder.FirstOrDefault(f => Path.GetFileName(f).Contains(id.ToString()));
-
-            //Delete file
-            if (fileToDelete != null)
+            return await Task.Run(() =>
             {
-                System.IO.File.Delete(fileToDelete);
-                return true;
-            }
+                try
+                {
+                    //Colect all files in directory
+                    var allFilesInFolder = Directory.EnumerateFiles(Path.Combine(_appEnvironment.WebRootPath, ConstantString.directoryName));
 
-            return false;
+                    //Find file with id in name
+                    var fileToDelete = allFilesInFolder.FirstOrDefault(f => Path.GetFileName(f).Contains(id.ToString()));
+
+                    //Delete file
+                    if (fileToDelete != null)
+                    {
+                        FileInfo tryReadOnly = new FileInfo(fileToDelete);
+                        tryReadOnly.IsReadOnly = false;
+                        System.IO.File.Delete(fileToDelete);
+                        return true;
+                    }
+
+                    return false;
+                }
+                catch(Exception ex)
+                {
+                    _logger.LogError($"Delete file with id = {id} failed. " + ex.Message);
+                    throw;
+                }
+            });
         }
 
         #endregion
