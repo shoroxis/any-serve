@@ -11,6 +11,9 @@ using System.Collections.Generic;
 using AnyServe.Models;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using AnyServe.ITests.UploadTests;
+using System.Text;
+using Microsoft.Extensions.Configuration;
+using AnyServe.ITests.Helpers;
 
 namespace AnyServe.ITests
 {
@@ -18,28 +21,48 @@ namespace AnyServe.ITests
     {
 
         private TestServer _server;
+        private AnyServUser _admin;
+        private AnyServUser _user;
+        private IConfigurationRoot _config;
 
         public HttpClient Client { get; private set; }
 
         public UploadFileTests()
         {
-            SetUpClient();
+            _config = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", false, true)
+            .Build();
 
+            _admin = new AnyServUser()
+            {
+                UserName = "admin",
+                Password = "1234",
+            };
+
+            _user = new AnyServUser()
+            {
+                UserName = "user",
+                Password = "1234",
+            };
+
+            SetUpClient();
         }
 
         #region Tests
 
         [Theory]
-        [InlineData("/api/Media")]
+        [InlineData("api/Media")]
         public async Task GetAll_ReturnExistedFilesAndSuccess(string url)
         {
             // Arrange (test preparation)
-            var expectedContentType = "application/json; charset=utf-8";
-
-            // Act
+            string token = await GetToken(_admin);
             HttpResponseMessage response;
 
-            response = await Client.GetAsync(url);
+            // Act
+            var getRequest = new HttpRequestMessage(HttpMethod.Get, url);
+            getRequest.Headers.Add("Authorization", $"Bearer {token}");
+            response = await Client.SendAsync(getRequest);
             
 
             // Assert
@@ -56,12 +79,16 @@ namespace AnyServe.ITests
                 // Add file (file, field name, file name)
                 formData.Add(content1, "upload", ConstantString.singleFile);
 
-                response = await Client.PostAsync(ConstantString.urlSingleItemUpload, formData);
+                var postRequest = new HttpRequestMessage(HttpMethod.Post, ConstantString.urlSingleItemUpload);
+                postRequest.Headers.Add("Authorization", $"Bearer {token}");
+                postRequest.Content = formData;
+                response = await Client.SendAsync(postRequest);
             }
 
             // Assert
             response.EnsureSuccessStatusCode(); // Status Code 200-299
 
+            var expectedContentType = "application/json; charset=utf-8";
             Assert.Equal(expectedContentType, response.Content.Headers.ContentType.ToString());
 
             var singleFile = JsonConvert.DeserializeObject<FileModelResponse>(await response.Content.ReadAsStringAsync());
@@ -101,6 +128,7 @@ namespace AnyServe.ITests
         public async Task Upload_SingleFileAndReturnSuccess(string url)
         {
             // Arrange (test preparation)
+            string token = await GetToken(_admin);
             var expectedContentType = "application/json; charset=utf-8";
 
             // Act
@@ -113,7 +141,10 @@ namespace AnyServe.ITests
                 // Add file (file, field name, file name)
                 formData.Add(content1, "upload", ConstantString.singleFile);
 
-                response = await Client.PostAsync(url, formData);
+                var postRequest = new HttpRequestMessage(HttpMethod.Post, url);
+                postRequest.Headers.Add("Authorization", $"Bearer {token}");
+                postRequest.Content = formData;
+                response = await Client.SendAsync(postRequest);
             }
 
             // Assert
@@ -230,9 +261,22 @@ namespace AnyServe.ITests
             _server = new TestServer(new WebHostBuilder()
                         .UseContentRoot(Directory.GetCurrentDirectory())
                         .UseWebRoot("wwwroot")
+                        .UseConfiguration(_config)
                         .UseStartup<Startup>());
+            _server.BaseAddress = new Uri(@"https://localhost:5001/");
 
             Client = _server.CreateClient();
+        }
+
+        private async Task<string> GetToken(AnyServUser credentials)
+        {
+            var json = JsonConvert.SerializeObject(credentials);
+            var data = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await Client.PostAsync(ConstantString.LoginUrl, data);
+            response.EnsureSuccessStatusCode();
+
+            UserTokenModel responseModel = JsonConvert.DeserializeObject<UserTokenModel>(await response.Content.ReadAsStringAsync());
+            return responseModel.Token;
         }
 
         #endregion

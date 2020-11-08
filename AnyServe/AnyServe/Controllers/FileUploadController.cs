@@ -13,6 +13,7 @@ using System.Net;
 using System.Text;
 using System.Collections;
 using AnyServe.Utility;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AnyServe.Controllers
 {
@@ -40,6 +41,7 @@ namespace AnyServe.Controllers
 
         // Single file upload
         [HttpPost("UploadFile")]
+        [Authorize(Policy = Policies.Admin)]
         public async Task<IActionResult> UploadFile([FromForm] IFormFile upload)
         {
             if (upload != null && Path.GetExtension(upload.FileName) != null)
