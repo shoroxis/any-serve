@@ -14,5 +14,6 @@ namespace AnyServe.ITests.UploadTests
         public const string fileNameNotExist = "file_not_exist.txt";
         public const string filesToUploadPath = @"UploadTests\TestFiles\";
         public static readonly string[] listFileName = { "text_1.txt", "text_2.txt", "text_3.txt" };
+        public const string LoginUrl = @"api/Login";
     }
 }

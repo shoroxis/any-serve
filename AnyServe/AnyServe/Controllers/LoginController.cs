@@ -47,8 +47,8 @@ namespace AnyServe.Controllers
                 var tokenString = GenerateJWTToken(user);
                 response = Ok(new
                 {
-                    token = tokenString,
-                    userDetails = user,
+                    Token = tokenString,
+                    UserDetails = user,
                 });
             }
             else
