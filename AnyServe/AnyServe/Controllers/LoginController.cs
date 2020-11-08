@@ -51,6 +51,11 @@ namespace AnyServe.Controllers
                     userDetails = user,
                 });
             }
+            else
+            {
+                _logger.LogWarning("User or password incorrect. Please try again");
+                 return Unauthorized("User or password incorrect. Please try again");
+            }
             return response;
         }
 
